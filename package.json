@@ -1,0 +1,25 @@
+{
+	"name": "reshape-autolink",
+	"version": "1.0.0",
+	"description": "Automatically inserts <script> and <link> tags for scripts/stylesheets with the same name as the template",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/HoldYourWaffle/reshape-autolink.git"
+	},
+	"keywords": [
+		"reshape-plugin"
+	],
+	"author": "HoldYourWaffle <supershitcodemonkey@gmail.com> (http://rubber-duck-debugging.nl)",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/HoldYourWaffle/reshape-autolink/issues"
+	},
+	"homepage": "https://github.com/HoldYourWaffle/reshape-autolink#readme",
+	"dependencies": {
+		"reshape-plugin-util": "^0.2.1"
+	}
+}
