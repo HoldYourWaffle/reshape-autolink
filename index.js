@@ -4,16 +4,17 @@ const path = require('path');
 
 /** Requires a filename option to be passed to reshape */
 module.exports = function reshapeAutolink(options = {}) {
-	//XXX can the basedir be resolved in the pre-processor? (compiler context)
 	const templateBaseDir = options.templateBaseDir;
 
 	const scriptDir = options.scriptDir;
 	const scriptPrefix = options.scriptPrefix || '/';
 	const scriptExtensions = options.scriptExtensions || ['js', 'jsx', 'ts', 'tsx'];
+	const scriptOutputExtension = options.scriptOutputExtension === undefined ? 'js' : options.scriptOutputExtension; //null is allowed to signal 'keep'
 
 	const styleDir = options.styleDir;
 	const stylePrefix = options.stylePrefix || '/';
 	const styleExtensions = options.styleExtensions || ['css', 'scss'];
+	const styleOutputExtension = options.styleOutputExtension === undefined ? 'css' : options.styleOutputExtension; //null is allowed to signal 'keep'
 
 
 	function log(msg) {
@@ -44,24 +45,24 @@ module.exports = function reshapeAutolink(options = {}) {
 				const templateName = templateBaseDir ? removeExtension(path.relative(templateBaseDir, path.resolve(templateBaseDir, opts.filename))) : templateFilePath.name;
 				
 				
-				function autolink(type, dir, extensions, linker) {
+				function autolink(type, dir, extensions, outputExtension, linker) {
 					//Base path of a potential linkfile
 					const basePath = path.resolve(dir, templateName);
 
-					//The first extension for which a corresponding script file exists
+					//The first extension for which a corresponding linkfile exists
 					const foundExtension = extensions.find(extension => fs.existsSync(`${basePath}.${extension}`));
 
 					if (!foundExtension) {
 						log(`Did not find ${type} for ${templateName} in ${basePath}`);
 					} else {
-						const linkPath = path.relative(dir, `${basePath}.${foundExtension}`);
+						const linkPath = path.relative(dir, `${basePath}.${outputExtension || foundExtension}`);
 						log(`Found ${type} for ${templateName}: ${linkPath}`);
 						node.content.push(linker(linkPath));
 					}
 				}
 				
 				
-				autolink('script', scriptDir, scriptExtensions, path => (
+				autolink('script', scriptDir, scriptExtensions, scriptOutputExtension, path => (
 					{
 						type: 'tag',
 						name: 'script',
@@ -74,7 +75,7 @@ module.exports = function reshapeAutolink(options = {}) {
 					}
 				));
 				
-				autolink('styles', styleDir, styleExtensions, path => (
+				autolink('styles', styleDir, styleExtensions, styleOutputExtension, path => (
 					{
 						type: 'tag',
 						name: 'link',
