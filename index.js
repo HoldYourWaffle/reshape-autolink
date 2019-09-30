@@ -42,62 +42,52 @@ module.exports = function reshapeAutolink(options = {}) {
 
 				//Name of the template (relative to the base dir if it exists)
 				const templateName = templateBaseDir ? removeExtension(path.relative(templateBaseDir, path.resolve(templateBaseDir, opts.filename))) : templateFilePath.name;
+				
+				
+				function autolink(type, dir, extensions, linker) {
+					//Base path of a potential linkfile
+					const basePath = path.resolve(dir, templateName);
 
+					//The first extension for which a corresponding script file exists
+					const foundExtension = extensions.find(extension => fs.existsSync(`${basePath}.${extension}`));
 
-
-				//Base path of a potential script file
-				const baseScriptPath = path.resolve(scriptDir, templateName);
-
-				//The first extension for which a corresponding script file exists
-				const foundScriptExtension = scriptExtensions.find(extension => fs.existsSync(`${baseScriptPath}.${extension}`));
-
-				if (!foundScriptExtension) {
-					log(`Did not find script for ${templateName} in ${baseScriptPath}`);
-				} else {
-					const scriptPath = path.relative(scriptDir, `${baseScriptPath}.${foundScriptExtension}`);
-					log(`Found script for ${templateName}: ${scriptPath}`);
-
-					node.content.push({
+					if (!foundExtension) {
+						log(`Did not find ${type} for ${templateName} in ${basePath}`);
+					} else {
+						const linkPath = path.relative(dir, `${basePath}.${foundExtension}`);
+						log(`Found ${type} for ${templateName}: ${linkPath}`);
+						node.content.push(linker(linkPath));
+					}
+				}
+				
+				
+				autolink('script', scriptDir, scriptExtensions, path => (
+					{
 						type: 'tag',
 						name: 'script',
 						content: [],
 						attrs: {
-							src: [{ type: 'text', content: scriptPrefix + scriptPath }],
+							src: [{ type: 'text', content: scriptPrefix + path }],
 							defer: [{ type: 'text', content: '' }]
 						},
 						location: {}
-					});
-				}
-
-
-
-
-				//Base path of a potential style file
-				const baseStylePath = path.resolve(styleDir, templateName);
-
-				//The first extension for which a corresponding style file exists
-				const foundStyleExtension = styleExtensions.find(extension => fs.existsSync(`${baseStylePath}.${extension}`));
-
-				if (!foundStyleExtension) {
-					log(`Did not find styles for ${templateName} in ${baseStylePath}`);
-				} else {
-					const stylePath = path.relative(styleDir, `${baseStylePath}.${foundStyleExtension}`);
-					log(`Found styles for ${templateName}: ${stylePath}`);
-
-					node.content.push({
+					}
+				));
+				
+				autolink('styles', styleDir, styleExtensions, path => (
+					{
 						type: 'tag',
 						name: 'link',
 						content: [],
 						attrs: {
 							rel: [{ type: 'text', content: 'stylesheet' }],
-							href: [{ type: 'text', content: stylePrefix + stylePath }]
+							href: [{ type: 'text', content: stylePrefix + path }]
 						},
 						location: {}
-					});
-				}
+					}
+				));
 
-
-
+				
 				log('');
 				return node;
 			}
