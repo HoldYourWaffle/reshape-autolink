@@ -6,16 +6,21 @@ const path = require('path');
 module.exports = function reshapeAutolink(options = {}) {
 	const templateBaseDir = options.templateBaseDir;
 
-	const scriptDir = options.scriptDir;
-	const scriptPrefix = options.scriptPrefix || '/';
-	const scriptExtensions = options.scriptExtensions || ['js', 'jsx', 'ts', 'tsx'];
-	const scriptOutputExtension = options.scriptOutputExtension === undefined ? 'js' : options.scriptOutputExtension; //null is allowed to signal 'keep'
-
-	const styleDir = options.styleDir;
-	const stylePrefix = options.stylePrefix || '/';
-	const styleExtensions = options.styleExtensions || ['css', 'scss'];
-	const styleOutputExtension = options.styleOutputExtension === undefined ? 'css' : options.styleOutputExtension; //null is allowed to signal 'keep'
-
+	const settings = {
+		script: {
+			dir: options.script.dir,
+			prefix: options.script.prefix || '/',
+			searchExtensions: options.script.searchExtensions || ['js', 'jsx', 'ts', 'tsx'],
+			outputExtension: options.script.outputExtension
+		},
+		
+		style: {
+			dir: options.style.dir,
+			prefix: options.style.prefix || '/',
+			searchExtensions: options.style.searchExtensions || ['css', 'scss', 'sass'],
+			outputExtension: options.style.outputExtension
+		}
+	}
 
 	function log(msg) {
 		if (options.verbose) {
@@ -45,44 +50,44 @@ module.exports = function reshapeAutolink(options = {}) {
 				const templateName = templateBaseDir ? removeExtension(path.relative(templateBaseDir, path.resolve(templateBaseDir, opts.filename))) : templateFilePath.name;
 				
 				
-				function autolink(type, dir, extensions, outputExtension, linker) {
+				function autolink(type, options, linker) {
 					//Base path of a potential linkfile
-					const basePath = path.resolve(dir, templateName);
+					const basePath = path.resolve(options.dir, templateName);
 
 					//The first extension for which a corresponding linkfile exists
-					const foundExtension = extensions.find(extension => fs.existsSync(`${basePath}.${extension}`));
+					const foundExtension = options.searchExtensions.find(extension => fs.existsSync(`${basePath}.${extension}`));
 
 					if (!foundExtension) {
 						log(`Did not find ${type} for ${templateName} in ${basePath}`);
 					} else {
-						const linkPath = path.relative(dir, `${basePath}.${outputExtension || foundExtension}`);
+						const linkPath = path.relative(options.dir, `${basePath}.${options.outputExtension || foundExtension}`);
 						log(`Found ${type} for ${templateName}: ${linkPath}`);
 						node.content.push(linker(linkPath));
 					}
 				}
 				
 				
-				autolink('script', scriptDir, scriptExtensions, scriptOutputExtension, path => (
+				autolink('script', settings.script, path => (
 					{
 						type: 'tag',
 						name: 'script',
 						content: [],
 						attrs: {
-							src: [{ type: 'text', content: scriptPrefix + path }],
+							src: [{ type: 'text', content: settings.script.prefix + path }],
 							defer: [{ type: 'text', content: '' }]
 						},
 						location: {}
 					}
 				));
 				
-				autolink('styles', styleDir, styleExtensions, styleOutputExtension, path => (
+				autolink('styles', settings.style, path => (
 					{
 						type: 'tag',
 						name: 'link',
 						content: [],
 						attrs: {
 							rel: [{ type: 'text', content: 'stylesheet' }],
-							href: [{ type: 'text', content: stylePrefix + path }]
+							href: [{ type: 'text', content: settings.style.prefix + path }]
 						},
 						location: {}
 					}
