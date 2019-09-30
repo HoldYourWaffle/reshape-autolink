@@ -1,6 +1,6 @@
 {
 	"name": "reshape-autolink",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"description": "Automatically inserts <script> and <link> tags for scripts/stylesheets with the same name as the template",
 	"main": "index.js",
 	"scripts": {
